@@ -9,15 +9,15 @@ import DatePicker from 'react-datepicker';
 function BookingScreen() {
 
 
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const handleStartDateChange = (date) => {
     if (!endDate || date <= endDate) {
       setStartDate(date);
     } else {
       setStartDate(date);
-      setEndDate(null);
+      setEndDate("");
     }
   };
 
@@ -25,7 +25,7 @@ function BookingScreen() {
     if (!startDate || date >= startDate) {
       setEndDate(date);
     } else {
-      setStartDate(null);
+      setStartDate("");
       setEndDate(date);
     }
   };
@@ -33,7 +33,7 @@ function BookingScreen() {
   const { roomid } = useParams();
 
  
-  const [Amount,setAmount]=useState();
+  const [Amount,setAmount]=useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [room, setRoom] = useState({});
@@ -46,10 +46,10 @@ function BookingScreen() {
             let data = (await axios.post("/api/rooms/getroombyid", { roomid })).data;
             setRoom(data);
             
-            if (startDate !== null && endDate !== null) {
+            if (startDate !== "" && endDate !== "") {
                 const daysInBookingPeriod = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
             
-                const totalRent = Math.ceil(daysInBookingPeriod/30)*room.rentperday;
+                const totalRent = Math.ceil(daysInBookingPeriod/30)*room.rentpermonth;
                 
                 setMonths(Math.ceil(daysInBookingPeriod/30));
                 setAmount(totalRent);
@@ -132,7 +132,7 @@ function BookingScreen() {
           <h1 className=''>{room.name}</h1>
           <img className="h-80 w-auto" src={room.imageurls[0]} alt="room image" />
         </div>
-        <div className=''>
+        <div className='w-fit'>
           <div className=' relative'>
           <b>
             <p className='p-2'><span className='text-gray-900'>Description: </span>  <span className='text-gray-500'>{room.description}</span></p>
@@ -141,7 +141,7 @@ function BookingScreen() {
             <hr></hr>
             <h1 className='p-2 text-xl'>Amount</h1>
             <p className='p-2'><span className='text-gray-900'>Type: </span> <span className='text-gray-500'>{room.type}</span></p>
-            <p className='p-2'><span className='text-gray-900'>Rent Per Month: Rs</span><span className='text-gray-500'>{room.rentperday}</span></p>
+            <p className='p-2'><span className='text-gray-900'>Rent Per Month: Rs</span><span className='text-gray-500'>{room.rentpermonth}</span></p>
             <p className='p-2'><span className='text-gray-900'>Total Amount: ₹</span><span className='text-green-500 text-lg'>{Amount}</span></p>
 
           </b>
