@@ -1,33 +1,34 @@
-const express=require("express");
-const cors= require("cors");
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
-const  app=express();
+const app = express();
 
-// app.use(cors(
-//     {
-//         origin:[""],
-//         methods:["POST", "GET"],
-//         credentials:true
-//     }
-// ))
+const dbConfig = require('./dbSetup');
 
-const dbConfig=require('./dbSetup');
+const usersRoute = require("./routes/userRoute");
+const roomsRoute = require('./routes/roomsRoute');
+const bookingRoute = require("./routes/bookingRoute");
 
-const usersRoute=require("./routes/userRoute")
-
-const roomsRoute=require('./routes/roomsRoute')
-
-const bookingRoute=require("./routes/bookingRoute");
-
+// Middleware
 app.use(express.json());
+app.use(cors({
+  origin: ["http://localhost:3000"], // Update this with your client URL
+  methods: ["POST", "GET"],
+  credentials: true
+}));
 
-// app.use("/",(req,res)=>{
-//     res.send("server is running new");
-// })
-app.use('/api/book',bookingRoute)
+// API Routes
+app.use('/api/book', bookingRoute);
+app.use('/api/users', usersRoute);
+app.use('/api/rooms', roomsRoute);
 
-app.use('/api/users',usersRoute)
-app.use('/api/rooms',roomsRoute)
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
 
-const port= process.env.PORT || 5000;
-app.listen(port,()=> (console.log(`server runnning on port ${port}`))) ;
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'client', 'build', 'index.html'));
+});
+
+const port = process.env.PORT || 5000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
