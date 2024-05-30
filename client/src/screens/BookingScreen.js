@@ -12,6 +12,7 @@ function BookingScreen() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  const  user = JSON.parse(localStorage.getItem("user"));
   const handleStartDateChange = (date) => {
     if (!endDate || date <= endDate) {
       setStartDate(date);
@@ -66,8 +67,102 @@ function BookingScreen() {
     fetchData();
 }, [startDate, endDate, roomid]);
    
-  async function bookRoom(e){
-    e.preventDefault()
+function loadScript(src) {
+  return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = () => {
+          resolve(true);
+      };
+      script.onerror = () => {
+          resolve(false);
+      };
+      document.body.appendChild(script);
+  });
+}
+
+async function displayRazorpay() {
+const res = await loadScript(
+    "https://checkout.razorpay.com/v1/checkout.js"
+);
+
+if (!res) {
+    alert("Razorpay SDK failed to load. Are you online?");
+    return;
+}
+
+// creating a new order
+const result = await axios.post("/api/payments/orders",{price:Amount
+
+  
+});
+
+if (!result) {
+    alert("Server error. Are you online?");
+    return;
+}
+
+// Getting the order details back
+const { amount, id: order_id, currency } = result.data;
+
+const options = {
+    key: process.env.RAZORPAY_KEY_ID, // Enter the Key ID generated from the Dashboard
+    amount: amount.toString(),
+    currency: currency,
+    name: "pgDekho.com",
+    description: `Your payment for booking room` ,
+    image: "",
+    order_id: order_id,
+    handler: async function (response) {
+        const data = {
+            orderCreationId: order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpaySignature: response.razorpay_signature,
+        };
+
+        const result = await axios.post("/api/payments/success", data);
+        if(result.msg==="success")
+          {
+            const bookingDetails={
+              room:room.name,
+              roomid:room._id,
+              userid:JSON.parse(localStorage.getItem("user"))._id,
+              fromdate:startDate,
+              todate:endDate,
+              totalamount:Amount,
+              totalmonths:month,
+            }
+            try{
+               
+               const result= (await axios.post("/api/book/bookroom",bookingDetails)).data;
+               console.log(result);
+            }
+            catch(error){
+              console.log(error);
+            }
+          }
+        alert(result.data.msg);
+    },
+    prefill: {
+        name: user.name,
+        email: user.email,
+        contact: user.phone,
+    },
+    notes: {
+        address: "114, Street no 16, Wazirabad Village, New delhi, 110084",
+    },
+    theme: {
+        color: "#61dafb",
+    },
+};
+
+const paymentObject = new window.Razorpay(options);
+paymentObject.open();
+}
+
+
+  async function bookRoom(){
     const bookingDetails={
       room:room.name,
       roomid:room._id,
@@ -78,6 +173,7 @@ function BookingScreen() {
       totalmonths:month,
     }
     try{
+       
        const result= (await axios.post("/api/book/bookroom",bookingDetails)).data;
        console.log(result);
     }
@@ -97,12 +193,12 @@ function BookingScreen() {
   return (
    <div> 
     {!endDate && <h1 className="text-center text-2xl font-bold text-blue-700 mb-8 shadow-md py-4 px-6 rounded-lg animate-bounce"> Select Dates to Continue</h1>}
-    <div className='flex justify-around h-auto shadow-lg '>
+    <div className='flex justify-around h-auto  '>
 
        <div>
          <label>From : </label>
          <DatePicker
-           className='outline-dotted my-2'
+           className='border-b-2 rounded-lg text-center border-blue-700 my-2'
            selected={startDate}
            onChange={handleStartDateChange}
            selectsStart
@@ -115,7 +211,7 @@ function BookingScreen() {
        <div>
          <label>To : </label>
          <DatePicker
-           className='outline-dotted my-2'
+           className='border-b-2 text-center rounded-lg border-blue-700 my-2'
            selected={endDate}
            onChange={handleEndDateChange}
            selectsEnd
@@ -127,26 +223,36 @@ function BookingScreen() {
          </div>
       </div>
     <div>
-    <div className='flex shadow-Xl p-4 m-10 rounded-lg'>
+    <div className='flex shadow-md p-4 m-10'>
        <div className='flex flex-col'>
-          <h1 className=''>{room.name}</h1>
-          <img className="h-80 w-auto" src={room.imageurls[0]} alt="room image" />
+          <h1 className='font-semibold mb-2'>{room.name}</h1>
+          <img className="h-80 w-auto rounded-lg" src={room.imageurls[0]} alt="room image" />
         </div>
         <div className='w-fit'>
-          <div className=' relative'>
-          <b>
-            <p className='p-2'><span className='text-gray-900'>Description: </span>  <span className='text-gray-500'>{room.description}</span></p>
-            <p className='p-2'><span className='text-gray-900'>Max Capacity: </span>  <span className='text-gray-500'>{room.maxcount}</span></p>
-            <p className='p-2'><span className='text-gray-900'>Owner's Contact: </span> <span className='text-gray-500'>  {room.phonenumber}</span></p>
+          <div className=' relative ml-10 mr-2'>
+            <p className='p-2'><span className=''>Description: </span>  <span className='text-gray-500'>{room.description}</span></p>
+            <p className='p-2'><span className=''>Max Capacity: </span>  <span className='text-gray-500'>{room.maxCount}</span></p>
+            <p className='p-2'><span className=''>Owner's Contact: </span> <span className='text-gray-500'>  {room.phonenumber}</span></p>
             <hr></hr>
             <h1 className='p-2 text-xl'>Amount</h1>
-            <p className='p-2'><span className='text-gray-900'>Type: </span> <span className='text-gray-500'>{room.type}</span></p>
-            <p className='p-2'><span className='text-gray-900'>Rent Per Month: Rs</span><span className='text-gray-500'>{room.rentpermonth}</span></p>
-            <p className='p-2'><span className='text-gray-900'>Total Amount: ₹</span><span className='text-green-500 text-lg'>{Amount}</span></p>
-
-          </b>
-          <button className="absolute bottom-30  m-4 bg-blue-800 px-2 py-2 shadow-md rounded-lg text-white" type="submit" onClick={bookRoom}>
-           Pay Now</button>
+            <p className='p-2'><span className=''>Type: </span> <span className='text-gray-500'>{room.type}</span></p>
+            <p className='p-2'><span className=''>Rent Per Month: ₹</span><span className='text-gray-500'>{room.rentpermonth}</span></p>
+           {Amount && <p className='p-2'><span className=''>Total Amount: ₹</span><span className='text-green-500 text-lg'>{Amount}</span></p>}
+             <div className='flex'>
+               <div className='flex'>
+                 {Amount &&  <button className="ml-2 mt-5 mr-4 bg-blue-800 px-2 py-2 shadow-md rounded-lg text-white" type="submit" onClick={displayRazorpay} >
+                  Pay Now</button>}
+               </div>
+               { startDate &&  endDate &&  
+                <div className='flex flex-col mt-5'>
+                 <div>
+                   <button onClick={bookRoom} className="ml-2 bg-green-500 px-2 py-2 shadow-md rounded-lg text-white">BookNow</button>
+                 </div>
+  
+                </div>
+               }
+             </div>
+            <span className=''>You can book here and can pay rest amount at property</span>
         </div>
        </div> 
        </div>

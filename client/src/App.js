@@ -7,7 +7,7 @@ import HomeScreen from './screens/HomeScreen';
 import RegisterForm from './components/RegisterForm';
 import AdminScreen from './screens/AdminScreen';
 import LocationScreen from './screens/LocationScreen';
-
+import Footer from './components/Footer';
 function App() {
   return (
     <div className="dark:bg-gray-800">
@@ -22,6 +22,7 @@ function App() {
           <Route path="/location/:country/:state/:city/:locality" exact element={<LocationScreen/>}/>
           <Route path="/AdminScreen" exact element={<AdminScreen/>}/>
         </Routes>
+        <Footer/>
       </BrowserRouter>
     </div>
   );

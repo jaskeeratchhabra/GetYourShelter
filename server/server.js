@@ -6,6 +6,7 @@ const app = express();
 
 const dbConfig = require('./dbSetup');
 
+const paymentRoute= require("./routes/paymentRoute")
 const usersRoute = require("./routes/userRoute");
 const roomsRoute = require('./routes/roomsRoute');
 const bookingRoute = require("./routes/bookingRoute");
@@ -19,6 +20,7 @@ app.use(cors({
 }));
 
 // API Routes
+app.use("/api/payments",paymentRoute);
 app.use('/api/book', bookingRoute);
 app.use('/api/users', usersRoute);
 app.use('/api/rooms', roomsRoute);
